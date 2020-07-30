@@ -16,8 +16,11 @@
 package com.google.android.exoplayer2.util;
 
 import androidx.annotation.Nullable;
+import java.io.IOException;
+import java.io.InputStream;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 /**
  * {@link XmlPullParser} utility methods.
@@ -25,6 +28,28 @@ import org.xmlpull.v1.XmlPullParserException;
 public final class XmlPullParserUtil {
 
   private XmlPullParserUtil() {}
+
+  /**
+   * Returns the XML start tag name.
+   *
+   * @param inputStream The {@link InputStream} to read the XML data from.
+   * @return The XML start tag name, or null if the data is not XML or contains no start tag.
+   * @throws IOException If an error occurs querying the parser.
+   */
+  @Nullable
+  public static String getXmlStartTagName(InputStream inputStream) throws IOException {
+    try {
+      XmlPullParser xmlPullParser = XmlPullParserFactory.newInstance().newPullParser();
+      xmlPullParser.setInput(inputStream, /* inputEncoding= */ null);
+      if (xmlPullParser.next() == XmlPullParser.START_TAG) {
+        return xmlPullParser.getName();
+      }
+    } catch (XmlPullParserException e) {
+      // Expected to happen for non xml data.
+    }
+    return null;
+  }
+
 
   /**
    * Returns whether the current event is an end tag with the specified name.

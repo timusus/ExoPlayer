@@ -41,6 +41,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -174,6 +175,34 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
   private final HlsMasterPlaylist masterPlaylist;
 
   /**
+   * Reads the HLS playlist header from the provided {@link Reader} including the final line break.
+   *
+   * @param reader The {@link Reader} to read the HLS playlist header from.
+   * @return Whether the header was read successfully.
+   * @throws IOException If an error occurred while reading.
+   */
+  public static boolean readHlsPlaylistHeader(Reader reader) throws IOException {
+    int last = reader.read();
+    if (last == 0xEF) {
+      if (reader.read() != 0xBB || reader.read() != 0xBF) {
+        return false;
+      }
+      // The playlist contains a Byte Order Mark, which gets discarded.
+      last = reader.read();
+    }
+    last = skipIgnorableWhitespace(reader, true, last);
+    int playlistHeaderLength = PLAYLIST_HEADER.length();
+    for (int i = 0; i < playlistHeaderLength; i++) {
+      if (last != PLAYLIST_HEADER.charAt(i)) {
+        return false;
+      }
+      last = reader.read();
+    }
+    last = skipIgnorableWhitespace(reader, false, last);
+    return Util.isLinebreak(last);
+  }
+
+  /**
    * Creates an instance where media playlists are parsed without inheriting attributes from a
    * master playlist.
    */
@@ -197,7 +226,7 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
     Queue<String> extraLines = new ArrayDeque<>();
     String line;
     try {
-      if (!checkPlaylistHeader(reader)) {
+      if (!readHlsPlaylistHeader(reader)) {
         throw new UnrecognizedInputFormatException("Input does not start with the #EXTM3U header.",
             uri);
       }
@@ -229,28 +258,7 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
     throw new ParserException("Failed to parse the playlist, could not identify any tags.");
   }
 
-  private static boolean checkPlaylistHeader(BufferedReader reader) throws IOException {
-    int last = reader.read();
-    if (last == 0xEF) {
-      if (reader.read() != 0xBB || reader.read() != 0xBF) {
-        return false;
-      }
-      // The playlist contains a Byte Order Mark, which gets discarded.
-      last = reader.read();
-    }
-    last = skipIgnorableWhitespace(reader, true, last);
-    int playlistHeaderLength = PLAYLIST_HEADER.length();
-    for (int i = 0; i < playlistHeaderLength; i++) {
-      if (last != PLAYLIST_HEADER.charAt(i)) {
-        return false;
-      }
-      last = reader.read();
-    }
-    last = skipIgnorableWhitespace(reader, false, last);
-    return Util.isLinebreak(last);
-  }
-
-  private static int skipIgnorableWhitespace(BufferedReader reader, boolean skipLinebreaks, int c)
+  private static int skipIgnorableWhitespace(Reader reader, boolean skipLinebreaks, int c)
       throws IOException {
     while (c != -1 && Character.isWhitespace(c) && (skipLinebreaks || !Util.isLinebreak(c))) {
       c = reader.read();

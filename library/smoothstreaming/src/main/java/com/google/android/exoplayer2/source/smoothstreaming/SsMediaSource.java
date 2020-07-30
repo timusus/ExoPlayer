@@ -61,7 +61,9 @@ import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
+import com.google.android.exoplayer2.util.XmlPullParserUtil;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -78,8 +80,8 @@ public final class SsMediaSource extends BaseMediaSource
   public static final class Factory implements MediaSourceFactory {
 
     private final SsChunkSource.Factory chunkSourceFactory;
-    @Nullable private final DataSource.Factory manifestDataSourceFactory;
 
+    @Nullable private DataSource.Factory manifestDataSourceFactory;
     private CompositeSequenceableLoaderFactory compositeSequenceableLoaderFactory;
     private DrmSessionManager drmSessionManager;
     private LoadErrorHandlingPolicy loadErrorHandlingPolicy;
@@ -364,6 +366,12 @@ public final class SsMediaSource extends BaseMediaSource
     }
 
     @Override
+    public Factory setDataSourceFactory(DataSource.Factory dataSourceFactory) {
+      manifestDataSourceFactory = dataSourceFactory;
+      return this;
+    }
+
+    @Override
     public int[] getSupportedTypes() {
       return new int[] {C.TYPE_SS};
     }
@@ -610,6 +618,11 @@ public final class SsMediaSource extends BaseMediaSource
   @Override
   public MediaItem getMediaItem() {
     return mediaItem;
+  }
+
+  @Override
+  public boolean canPrepareWithStream(InputStream inputStream) throws IOException {
+    return "SmoothStreamingMedia".equals(XmlPullParserUtil.getXmlStartTagName(inputStream));
   }
 
   @Override

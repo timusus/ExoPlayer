@@ -24,6 +24,7 @@ import com.google.android.exoplayer2.drm.DrmSessionEventListener;
 import com.google.android.exoplayer2.upstream.Allocator;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Defines and provides media to be played by an {@link com.google.android.exoplayer2.ExoPlayer}. A
@@ -285,6 +286,23 @@ public interface MediaSource {
 
   /** Returns the {@link MediaItem} whose media is provided by the source. */
   MediaItem getMediaItem();
+
+  /**
+   * Returns whether data from the given {@link InputStream} can be used to {@link
+   * #prepareSource(MediaSourceCaller, TransferListener) prepare} the source.
+   *
+   * <p>Note that this method can block until it read enough data from the input stream to determine
+   * the answer. The method should only read as far as needed to return an answer.
+   *
+   * @param inputStream The {@link InputStream}.
+   * @return Whether the data in the stream can be used for preparation.
+   * @throws IOException If an error occurred while reading.
+   */
+  default boolean canPrepareWithStream(InputStream inputStream) throws IOException {
+    // TODO: Remove once all MediaSource are migrated.
+    return false;
+  }
+
 
   /**
    * Registers a {@link MediaSourceCaller}. Starts source preparation if needed and enables the

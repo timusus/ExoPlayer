@@ -256,6 +256,14 @@ public final class DefaultMediaSourceFactory implements MediaSourceFactory {
     return this;
   }
 
+  @Override
+  public MediaSourceFactory setDataSourceFactory(DataSource.Factory dataSourceFactory) {
+    for (int i = 0; i < mediaSourceFactories.size(); i++) {
+      mediaSourceFactories.valueAt(i).setDataSourceFactory(dataSourceFactory);
+    }
+    return this;
+  }
+
   /**
    * @deprecated Use {@link MediaItem.Builder#setStreamKeys(List)} and {@link
    *     #createMediaSource(MediaItem)} instead.

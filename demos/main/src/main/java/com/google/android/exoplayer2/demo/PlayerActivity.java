@@ -43,6 +43,7 @@ import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer.DecoderInitia
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil.DecoderQueryException;
 import com.google.android.exoplayer2.source.BehindLiveWindowException;
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
+import com.google.android.exoplayer2.source.DefaultMediaSource;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.ads.AdsLoader;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
@@ -288,9 +289,7 @@ public class PlayerActivity extends AppCompatActivity
 
       player =
           new SimpleExoPlayer.Builder(/* context= */ this, renderersFactory)
-              .setMediaSourceFactory(
-                  DefaultMediaSourceFactory.newInstance(
-                      /* context= */ this, dataSourceFactory, new AdSupportProvider()))
+              .setMediaSourceFactory(new DefaultMediaSource.Factory(dataSourceFactory))
               .setTrackSelector(trackSelector)
               .build();
       player.addListener(new PlayerEventListener());

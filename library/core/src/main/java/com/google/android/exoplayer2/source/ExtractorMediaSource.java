@@ -26,6 +26,7 @@ import com.google.android.exoplayer2.drm.DrmSessionManager;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.extractor.Extractor;
 import com.google.android.exoplayer2.extractor.ExtractorsFactory;
+import com.google.android.exoplayer2.offline.StreamKey;
 import com.google.android.exoplayer2.upstream.Allocator;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy;
@@ -33,6 +34,7 @@ import com.google.android.exoplayer2.upstream.LoadErrorHandlingPolicy;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.Assertions;
 import java.io.IOException;
+import java.util.List;
 
 /** @deprecated Use {@link ProgressiveMediaSource} instead. */
 @Deprecated
@@ -63,8 +65,7 @@ public final class ExtractorMediaSource extends CompositeMediaSource<Void> {
   @Deprecated
   public static final class Factory implements MediaSourceFactory {
 
-    private final DataSource.Factory dataSourceFactory;
-
+    private DataSource.Factory dataSourceFactory;
     private ExtractorsFactory extractorsFactory;
     private LoadErrorHandlingPolicy loadErrorHandlingPolicy;
     private int continueLoadingCheckIntervalBytes;
@@ -208,6 +209,17 @@ public final class ExtractorMediaSource extends CompositeMediaSource<Void> {
         mediaSource.addEventListener(eventHandler, eventListener);
       }
       return mediaSource;
+    }
+
+    @Override
+    public Factory setDataSourceFactory(DataSource.Factory dataSourceFactory) {
+      this.dataSourceFactory = dataSourceFactory;
+      return this;
+    }
+
+    @Override
+    public Factory setStreamKeys(@Nullable List<StreamKey> streamKeys) {
+      return this;
     }
 
     @Override

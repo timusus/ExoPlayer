@@ -66,6 +66,7 @@ import com.google.android.exoplayer2.util.Log;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.SntpClient;
 import com.google.android.exoplayer2.util.Util;
+import com.google.android.exoplayer2.util.XmlPullParserUtil;
 import com.google.common.base.Charsets;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -91,8 +92,8 @@ public final class DashMediaSource extends BaseMediaSource {
   public static final class Factory implements MediaSourceFactory {
 
     private final DashChunkSource.Factory chunkSourceFactory;
-    @Nullable private final DataSource.Factory manifestDataSourceFactory;
 
+    @Nullable private DataSource.Factory manifestDataSourceFactory;
     private DrmSessionManager drmSessionManager;
     private CompositeSequenceableLoaderFactory compositeSequenceableLoaderFactory;
     private LoadErrorHandlingPolicy loadErrorHandlingPolicy;
@@ -410,6 +411,12 @@ public final class DashMediaSource extends BaseMediaSource {
     }
 
     @Override
+    public Factory setDataSourceFactory(DataSource.Factory dataSourceFactory) {
+      manifestDataSourceFactory = dataSourceFactory;
+      return this;
+    }
+
+    @Override
     public int[] getSupportedTypes() {
       return new int[] {C.TYPE_DASH};
     }
@@ -672,6 +679,11 @@ public final class DashMediaSource extends BaseMediaSource {
   @Override
   public MediaItem getMediaItem() {
     return mediaItem;
+  }
+
+  @Override
+  public boolean canPrepareWithStream(InputStream inputStream) throws IOException {
+    return "MPD".equals(XmlPullParserUtil.getXmlStartTagName(inputStream));
   }
 
   @Override

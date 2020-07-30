@@ -32,6 +32,7 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy;
 import com.google.android.exoplayer2.upstream.LoadErrorHandlingPolicy;
 import com.google.android.exoplayer2.upstream.TransferListener;
+import java.io.InputStream;
 
 /**
  * Provides one period that loads data from a {@link Uri} and extracted using an {@link Extractor}.
@@ -50,8 +51,7 @@ public final class ProgressiveMediaSource extends BaseMediaSource
   /** Factory for {@link ProgressiveMediaSource}s. */
   public static final class Factory implements MediaSourceFactory {
 
-    private final DataSource.Factory dataSourceFactory;
-
+    private DataSource.Factory dataSourceFactory;
     private ExtractorsFactory extractorsFactory;
     private DrmSessionManager drmSessionManager;
     private LoadErrorHandlingPolicy loadErrorHandlingPolicy;
@@ -143,6 +143,12 @@ public final class ProgressiveMediaSource extends BaseMediaSource
      */
     public Factory setContinueLoadingCheckIntervalBytes(int continueLoadingCheckIntervalBytes) {
       this.continueLoadingCheckIntervalBytes = continueLoadingCheckIntervalBytes;
+      return this;
+    }
+
+    @Override
+    public Factory setDataSourceFactory(DataSource.Factory dataSourceFactory) {
+      this.dataSourceFactory = dataSourceFactory;
       return this;
     }
 
@@ -258,6 +264,12 @@ public final class ProgressiveMediaSource extends BaseMediaSource
   @Override
   public MediaItem getMediaItem() {
     return mediaItem;
+  }
+
+  @Override
+  public boolean canPrepareWithStream(InputStream inputStream) {
+    // Always return true because selecting extractors and checking support is not part of prepare.
+    return true;
   }
 
   @Override

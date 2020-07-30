@@ -22,11 +22,21 @@ import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.drm.DrmSession;
 import com.google.android.exoplayer2.drm.DrmSessionManager;
 import com.google.android.exoplayer2.offline.StreamKey;
+import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.LoadErrorHandlingPolicy;
 import java.util.List;
 
 /** Factory for creating {@link MediaSource}s from URIs. */
 public interface MediaSourceFactory {
+
+  /**
+   * Sets a {@link DataSource.Factory} creating {@link DataSource} instances that will be used to
+   * load data.
+   *
+   * @param dataSourceFactory The {@link DataSource.Factory}.
+   * @return This factory, for convenience.
+   */
+  MediaSourceFactory setDataSourceFactory(DataSource.Factory dataSourceFactory);
 
   /** @deprecated Use {@link MediaItem.PlaybackProperties#streamKeys} instead. */
   @Deprecated

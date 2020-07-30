@@ -95,8 +95,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
    */
   private static final long DEFAULT_LAST_SAMPLE_DURATION_US = 10_000;
 
-  private static final Map<String, String> ICY_METADATA_HEADERS = createIcyMetadataHeaders();
-
   private static final Format ICY_FORMAT =
       new Format.Builder().setId("icy").setSampleMimeType(MimeTypes.APPLICATION_ICY).build();
 
@@ -1091,7 +1089,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
           .setKey(customCacheKey)
           .setFlags(
               DataSpec.FLAG_DONT_CACHE_IF_LENGTH_UNKNOWN | DataSpec.FLAG_ALLOW_CACHE_FRAGMENTATION)
-          .setHttpRequestHeaders(ICY_METADATA_HEADERS)
+          .setHttpRequestHeaders(IcyHeaders.ICY_METADATA_REQUEST_HEADERS)
           .build();
     }
 
@@ -1146,13 +1144,5 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
     public int hashCode() {
       return 31 * id + (isIcyTrack ? 1 : 0);
     }
-  }
-
-  private static Map<String, String> createIcyMetadataHeaders() {
-    Map<String, String> headers = new HashMap<>();
-    headers.put(
-        IcyHeaders.REQUEST_HEADER_ENABLE_METADATA_NAME,
-        IcyHeaders.REQUEST_HEADER_ENABLE_METADATA_VALUE);
-    return Collections.unmodifiableMap(headers);
   }
 }
