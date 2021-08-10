@@ -44,6 +44,7 @@ import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer.DecoderInitia
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil.DecoderQueryException;
 import com.google.android.exoplayer2.offline.DownloadRequest;
 import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
+import com.google.android.exoplayer2.source.DefaultMediaSource;
 import com.google.android.exoplayer2.source.MediaSourceFactory;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.ads.AdsLoader;
@@ -264,9 +265,7 @@ public class PlayerActivity extends AppCompatActivity
       RenderersFactory renderersFactory =
           DemoUtil.buildRenderersFactory(/* context= */ this, preferExtensionDecoders);
       MediaSourceFactory mediaSourceFactory =
-          new DefaultMediaSourceFactory(dataSourceFactory)
-              .setAdsLoaderProvider(this::getAdsLoader)
-              .setAdViewProvider(playerView);
+          new DefaultMediaSource.Factory(dataSourceFactory);
 
       trackSelector = new DefaultTrackSelector(/* context= */ this);
       trackSelector.setParameters(trackSelectorParameters);

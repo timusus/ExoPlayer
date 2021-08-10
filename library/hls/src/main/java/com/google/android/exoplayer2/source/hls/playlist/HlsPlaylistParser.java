@@ -290,7 +290,7 @@ public final class HlsPlaylistParser implements ParsingLoadable.Parser<HlsPlayli
         "Failed to parse the playlist, could not identify any tags.", /* cause= */ null);
   }
 
-  private static boolean checkPlaylistHeader(BufferedReader reader) throws IOException {
+  public static boolean checkPlaylistHeader(BufferedReader reader) throws IOException {
     int last = reader.read();
     if (last == 0xEF) {
       if (reader.read() != 0xBB || reader.read() != 0xBF) {

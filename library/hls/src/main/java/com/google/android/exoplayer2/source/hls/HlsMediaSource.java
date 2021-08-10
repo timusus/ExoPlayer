@@ -45,6 +45,7 @@ import com.google.android.exoplayer2.source.hls.playlist.DefaultHlsPlaylistParse
 import com.google.android.exoplayer2.source.hls.playlist.DefaultHlsPlaylistTracker;
 import com.google.android.exoplayer2.source.hls.playlist.FilteringHlsPlaylistParserFactory;
 import com.google.android.exoplayer2.source.hls.playlist.HlsMediaPlaylist;
+import com.google.android.exoplayer2.source.hls.playlist.HlsPlaylistParser;
 import com.google.android.exoplayer2.source.hls.playlist.HlsPlaylistParserFactory;
 import com.google.android.exoplayer2.source.hls.playlist.HlsPlaylistTracker;
 import com.google.android.exoplayer2.upstream.Allocator;
@@ -55,7 +56,10 @@ import com.google.android.exoplayer2.upstream.LoadErrorHandlingPolicy;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.util.Collections;
@@ -94,8 +98,7 @@ public final class HlsMediaSource extends BaseMediaSource
   /** Factory for {@link HlsMediaSource}s. */
   public static final class Factory implements MediaSourceFactory {
 
-    private final HlsDataSourceFactory hlsDataSourceFactory;
-
+    private HlsDataSourceFactory hlsDataSourceFactory;
     private HlsExtractorFactory extractorFactory;
     private HlsPlaylistParserFactory playlistParserFactory;
     private HlsPlaylistTracker.Factory playlistTrackerFactory;
@@ -403,6 +406,12 @@ public final class HlsMediaSource extends BaseMediaSource
     }
 
     @Override
+    public Factory setDataSourceFactory(DataSource.Factory dataSourceFactory) {
+      hlsDataSourceFactory = new DefaultHlsDataSourceFactory(dataSourceFactory);
+      return this;
+    }
+
+    @Override
     public int[] getSupportedTypes() {
       return new int[] {C.TYPE_HLS};
     }
@@ -454,6 +463,12 @@ public final class HlsMediaSource extends BaseMediaSource
   @Override
   public MediaItem getMediaItem() {
     return mediaItem;
+  }
+
+  @Override
+  public boolean canPrepareWithStream(InputStream inputStream) throws IOException {
+    BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+    return HlsPlaylistParser.checkPlaylistHeader(reader);
   }
 
   @Override

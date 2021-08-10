@@ -36,6 +36,7 @@ import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.MediaSourceFactory;
 import com.google.android.exoplayer2.source.SinglePeriodTimeline;
 import com.google.android.exoplayer2.upstream.Allocator;
+import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.upstream.LoadErrorHandlingPolicy;
 import com.google.android.exoplayer2.upstream.TransferListener;
@@ -114,6 +115,12 @@ public final class RtspMediaSource extends BaseMediaSource {
     public Factory setTimeoutMs(@IntRange(from = 1) long timeoutMs) {
       checkArgument(timeoutMs > 0);
       this.timeoutMs = timeoutMs;
+      return this;
+    }
+
+    /** Does nothing. Todo: Do something? */
+    @Override
+    public MediaSourceFactory setDataSourceFactory(DataSource.Factory dataSourceFactory) {
       return this;
     }
 
