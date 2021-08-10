@@ -21,6 +21,7 @@ import static java.lang.Math.min;
 import android.net.Uri;
 import androidx.annotation.Nullable;
 import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.testutil.FakeDataSet.FakeData;
 import com.google.android.exoplayer2.testutil.FakeDataSet.FakeData.Segment;
 import com.google.android.exoplayer2.upstream.BaseDataSource;
@@ -39,9 +40,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
  */
 public class FakeDataSource extends BaseDataSource {
 
-  /**
-   * Factory to create a {@link FakeDataSource}.
-   */
+  /** Factory to create a {@link FakeDataSource}. */
   public static class Factory implements DataSource.Factory {
 
     protected @MonotonicNonNull FakeDataSet fakeDataSet;
@@ -118,7 +117,7 @@ public class FakeDataSource extends BaseDataSource {
     }
 
     if (dataSpec.position > totalLength) {
-      throw new DataSourceException(DataSourceException.POSITION_OUT_OF_RANGE);
+      throw new DataSourceException(PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE);
     }
 
     // Scan through the segments, configuring them for the current read.
@@ -128,8 +127,10 @@ public class FakeDataSource extends BaseDataSource {
     for (Segment segment : fakeData.getSegments()) {
       segment.bytesRead = (int) min(max(0, dataSpec.position - scannedLength), segment.length);
       scannedLength += segment.length;
-      findingCurrentSegmentIndex &= segment.isErrorSegment() ? segment.exceptionCleared
-          : (!segment.isActionSegment() && segment.bytesRead == segment.length);
+      findingCurrentSegmentIndex &=
+          segment.isErrorSegment()
+              ? segment.exceptionCleared
+              : (!segment.isActionSegment() && segment.bytesRead == segment.length);
       if (findingCurrentSegmentIndex) {
         currentSegmentIndex++;
       }

@@ -62,7 +62,9 @@ import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.MimeTypes;
 import com.google.android.exoplayer2.util.Util;
+import com.google.android.exoplayer2.util.XmlPullParserUtil;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -79,8 +81,8 @@ public final class SsMediaSource extends BaseMediaSource
   public static final class Factory implements MediaSourceFactory {
 
     private final SsChunkSource.Factory chunkSourceFactory;
-    @Nullable private final DataSource.Factory manifestDataSourceFactory;
 
+    @Nullable private DataSource.Factory manifestDataSourceFactory;
     private CompositeSequenceableLoaderFactory compositeSequenceableLoaderFactory;
     private boolean usingCustomDrmSessionManagerProvider;
     private DrmSessionManagerProvider drmSessionManagerProvider;
@@ -350,6 +352,12 @@ public final class SsMediaSource extends BaseMediaSource
     }
 
     @Override
+    public Factory setDataSourceFactory(DataSource.Factory dataSourceFactory) {
+      manifestDataSourceFactory = dataSourceFactory;
+      return this;
+    }
+
+    @Override
     public int[] getSupportedTypes() {
       return new int[] {C.TYPE_SS};
     }
@@ -361,9 +369,7 @@ public final class SsMediaSource extends BaseMediaSource
    */
   public static final long DEFAULT_LIVE_PRESENTATION_DELAY_MS = 30_000;
 
-  /**
-   * The minimum period between manifest refreshes.
-   */
+  /** The minimum period between manifest refreshes. */
   private static final int MINIMUM_MANIFEST_REFRESH_PERIOD_MS = 5000;
   /**
    * The minimum default start position for live streams, relative to the start of the live window.
@@ -426,20 +432,14 @@ public final class SsMediaSource extends BaseMediaSource
 
   // MediaSource implementation.
 
-  /**
-   * @deprecated Use {@link #getMediaItem()} and {@link MediaItem.PlaybackProperties#tag} instead.
-   */
-  @SuppressWarnings("deprecation")
-  @Deprecated
-  @Override
-  @Nullable
-  public Object getTag() {
-    return playbackProperties.tag;
-  }
-
   @Override
   public MediaItem getMediaItem() {
     return mediaItem;
+  }
+
+  @Override
+  public boolean canPrepareWithStream(InputStream inputStream) throws IOException {
+    return "SmoothStreamingMedia".equals(XmlPullParserUtil.getXmlStartTagName(inputStream));
   }
 
   @Override
@@ -636,8 +636,8 @@ public final class SsMediaSource extends BaseMediaSource
               manifest,
               mediaItem);
     } else {
-      long durationUs = manifest.durationUs != C.TIME_UNSET ? manifest.durationUs
-          : endTimeUs - startTimeUs;
+      long durationUs =
+          manifest.durationUs != C.TIME_UNSET ? manifest.durationUs : endTimeUs - startTimeUs;
       timeline =
           new SinglePeriodTimeline(
               startTimeUs + durationUs,
@@ -666,8 +666,9 @@ public final class SsMediaSource extends BaseMediaSource
     if (manifestLoader.hasFatalError()) {
       return;
     }
-    ParsingLoadable<SsManifest> loadable = new ParsingLoadable<>(manifestDataSource,
-        manifestUri, C.DATA_TYPE_MANIFEST, manifestParser);
+    ParsingLoadable<SsManifest> loadable =
+        new ParsingLoadable<>(
+            manifestDataSource, manifestUri, C.DATA_TYPE_MANIFEST, manifestParser);
     long elapsedRealtimeMs =
         manifestLoader.startLoading(
             loadable, this, loadErrorHandlingPolicy.getMinimumLoadableRetryCount(loadable.type));
@@ -675,5 +676,4 @@ public final class SsMediaSource extends BaseMediaSource
         new LoadEventInfo(loadable.loadTaskId, loadable.dataSpec, elapsedRealtimeMs),
         loadable.type);
   }
-
 }

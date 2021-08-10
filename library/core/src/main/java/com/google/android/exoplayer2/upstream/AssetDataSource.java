@@ -23,6 +23,7 @@ import android.content.res.AssetManager;
 import android.net.Uri;
 import androidx.annotation.Nullable;
 import com.google.android.exoplayer2.C;
+import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.util.Assertions;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,15 +31,24 @@ import java.io.InputStream;
 /** A {@link DataSource} for reading from a local asset. */
 public final class AssetDataSource extends BaseDataSource {
 
-  /**
-   * Thrown when an {@link IOException} is encountered reading a local asset.
-   */
-  public static final class AssetDataSourceException extends IOException {
+  /** Thrown when an {@link IOException} is encountered reading a local asset. */
+  public static final class AssetDataSourceException extends DataSourceException {
 
+    /** @deprecated Use {@link #AssetDataSourceException(Throwable, int)}. */
+    @Deprecated
     public AssetDataSourceException(IOException cause) {
-      super(cause);
+      super(cause, PlaybackException.ERROR_CODE_IO_UNSPECIFIED);
     }
 
+    /**
+     * Creates a new instance.
+     *
+     * @param cause The error cause.
+     * @param errorCode See {@link PlaybackException.ErrorCode}.
+     */
+    public AssetDataSourceException(Throwable cause, @PlaybackException.ErrorCode int errorCode) {
+      super(cause, errorCode);
+    }
   }
 
   private final AssetManager assetManager;
@@ -70,7 +80,7 @@ public final class AssetDataSource extends BaseDataSource {
       if (skipped < dataSpec.position) {
         // assetManager.open() returns an AssetInputStream, whose skip() implementation only skips
         // fewer bytes than requested if the skip is beyond the end of the asset's data.
-        throw new DataSourceException(DataSourceException.POSITION_OUT_OF_RANGE);
+        throw new DataSourceException(PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE);
       }
       if (dataSpec.length != C.LENGTH_UNSET) {
         bytesRemaining = dataSpec.length;
@@ -84,7 +94,7 @@ public final class AssetDataSource extends BaseDataSource {
         }
       }
     } catch (IOException e) {
-      throw new AssetDataSourceException(e);
+      throw new AssetDataSourceException(e, PlaybackException.ERROR_CODE_IO_UNSPECIFIED);
     }
 
     opened = true;
@@ -106,7 +116,7 @@ public final class AssetDataSource extends BaseDataSource {
           bytesRemaining == C.LENGTH_UNSET ? readLength : (int) min(bytesRemaining, readLength);
       bytesRead = castNonNull(inputStream).read(buffer, offset, bytesToRead);
     } catch (IOException e) {
-      throw new AssetDataSourceException(e);
+      throw new AssetDataSourceException(e, PlaybackException.ERROR_CODE_IO_UNSPECIFIED);
     }
 
     if (bytesRead == -1) {
@@ -133,7 +143,7 @@ public final class AssetDataSource extends BaseDataSource {
         inputStream.close();
       }
     } catch (IOException e) {
-      throw new AssetDataSourceException(e);
+      throw new AssetDataSourceException(e, PlaybackException.ERROR_CODE_IO_UNSPECIFIED);
     } finally {
       inputStream = null;
       if (opened) {
@@ -142,5 +152,4 @@ public final class AssetDataSource extends BaseDataSource {
       }
     }
   }
-
 }

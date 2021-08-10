@@ -20,9 +20,11 @@ import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.util.Assertions;
+import com.google.common.base.Objects;
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -360,9 +362,7 @@ public final class DataSpec {
   /** The position of the data when read from {@link #uri}. */
   public final long position;
 
-  /**
-   * The length of the data, or {@link C#LENGTH_UNSET}.
-   */
+  /** The length of the data, or {@link C#LENGTH_UNSET}. */
   public final long length;
 
   /**
@@ -791,5 +791,23 @@ public final class DataSpec {
         + ", "
         + flags
         + "]";
+  }
+
+  /**
+   * Returns whether this data spec is compatible with another data spec. Data specs are compatible
+   * if the resulting load data can be used interchangeably.
+   *
+   * @param dataSpec The other data spec.
+   * @return Whether the data specs are compatible.
+   */
+  public boolean isCompatibleWith(DataSpec dataSpec) {
+    // Ignore flag and request header differences.
+    return httpMethod == dataSpec.httpMethod
+        && absoluteStreamPosition == dataSpec.absoluteStreamPosition
+        && position == dataSpec.position
+        && length == dataSpec.length
+        && Objects.equal(uri, dataSpec.uri)
+        && Arrays.equals(httpBody, dataSpec.httpBody)
+        && Objects.equal(key, dataSpec.key);
   }
 }

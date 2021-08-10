@@ -23,6 +23,7 @@ import android.net.Uri;
 import androidx.annotation.Nullable;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayerLibraryInfo;
+import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.upstream.BaseDataSource;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DataSourceException;
@@ -294,7 +295,11 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
         throw new CleartextNotPermittedException(e, dataSpec);
       }
       throw new HttpDataSourceException(
-          "Unable to connect", e, dataSpec, HttpDataSourceException.TYPE_OPEN);
+          "Unable to connect",
+          e,
+          dataSpec,
+          PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+          HttpDataSourceException.TYPE_OPEN);
     }
 
     int responseCode = response.code();
@@ -323,7 +328,8 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
           new InvalidResponseCodeException(
               responseCode, response.message(), headers, dataSpec, errorResponseBody);
       if (responseCode == 416) {
-        exception.initCause(new DataSourceException(DataSourceException.POSITION_OUT_OF_RANGE));
+        exception.initCause(
+            new DataSourceException(PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE));
       }
       throw exception;
     }
@@ -354,11 +360,15 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
 
     try {
       if (!skipFully(bytesToSkip)) {
-        throw new DataSourceException(DataSourceException.POSITION_OUT_OF_RANGE);
+        throw new DataSourceException(PlaybackException.ERROR_CODE_IO_READ_POSITION_OUT_OF_RANGE);
       }
     } catch (IOException e) {
       closeConnectionQuietly();
-      throw new HttpDataSourceException(e, dataSpec, HttpDataSourceException.TYPE_OPEN);
+      throw new HttpDataSourceException(
+          e,
+          dataSpec,
+          PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+          HttpDataSourceException.TYPE_OPEN);
     }
 
     return bytesToRead;
@@ -370,12 +380,15 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
       return readInternal(buffer, offset, readLength);
     } catch (IOException e) {
       throw new HttpDataSourceException(
-          e, Assertions.checkNotNull(dataSpec), HttpDataSourceException.TYPE_READ);
+          e,
+          Assertions.checkNotNull(dataSpec),
+          PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+          HttpDataSourceException.TYPE_READ);
     }
   }
 
   @Override
-  public void close() throws HttpDataSourceException {
+  public void close() {
     if (opened) {
       opened = false;
       transferEnded();
@@ -391,7 +404,10 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
     @Nullable HttpUrl url = HttpUrl.parse(dataSpec.uri.toString());
     if (url == null) {
       throw new HttpDataSourceException(
-          "Malformed URL", dataSpec, HttpDataSourceException.TYPE_OPEN);
+          "Malformed URL",
+          dataSpec,
+          PlaybackException.ERROR_CODE_IO_BAD_HTTP_REQUEST,
+          HttpDataSourceException.TYPE_OPEN);
     }
 
     Request.Builder builder = new Request.Builder().url(url);
@@ -463,11 +479,11 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
   }
 
   /**
-   * Reads up to {@code length} bytes of data and stores them into {@code buffer}, starting at
-   * index {@code offset}.
-   * <p>
-   * This method blocks until at least one byte of data can be read, the end of the opened range is
-   * detected, or an exception is thrown.
+   * Reads up to {@code length} bytes of data and stores them into {@code buffer}, starting at index
+   * {@code offset}.
+   *
+   * <p>This method blocks until at least one byte of data can be read, the end of the opened range
+   * is detected, or an exception is thrown.
    *
    * @param buffer The buffer into which the read data should be stored.
    * @param offset The start offset into {@code buffer} at which data should be written.
@@ -498,9 +514,7 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
     return read;
   }
 
-  /**
-   * Closes the current connection quietly, if there is one.
-   */
+  /** Closes the current connection quietly, if there is one. */
   private void closeConnectionQuietly() {
     if (response != null) {
       Assertions.checkNotNull(response.body()).close();
@@ -508,5 +522,4 @@ public class OkHttpDataSource extends BaseDataSource implements HttpDataSource {
     }
     responseByteStream = null;
   }
-
 }

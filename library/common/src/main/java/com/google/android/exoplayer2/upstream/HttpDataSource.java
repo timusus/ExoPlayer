@@ -18,6 +18,7 @@ package com.google.android.exoplayer2.upstream;
 import android.text.TextUtils;
 import androidx.annotation.IntDef;
 import androidx.annotation.Nullable;
+import com.google.android.exoplayer2.PlaybackException;
 import com.google.android.exoplayer2.util.Util;
 import com.google.common.base.Ascii;
 import com.google.common.base.Predicate;
@@ -33,9 +34,7 @@ import java.util.Map;
 /** An HTTP {@link DataSource}. */
 public interface HttpDataSource extends DataSource {
 
-  /**
-   * A factory for {@link HttpDataSource} instances.
-   */
+  /** A factory for {@link HttpDataSource} instances. */
   interface Factory extends DataSource.Factory {
 
     @Override
@@ -61,9 +60,9 @@ public interface HttpDataSource extends DataSource {
   }
 
   /**
-   * Stores HTTP request properties (aka HTTP headers) and provides methods to modify the headers
-   * in a thread safe way to avoid the potential of creating snapshots of an inconsistent or
-   * unintended state.
+   * Stores HTTP request properties (aka HTTP headers) and provides methods to modify the headers in
+   * a thread safe way to avoid the potential of creating snapshots of an inconsistent or unintended
+   * state.
    */
   final class RequestProperties {
 
@@ -119,9 +118,7 @@ public interface HttpDataSource extends DataSource {
       requestProperties.remove(name);
     }
 
-    /**
-     * Clears all request properties.
-     */
+    /** Clears all request properties. */
     public synchronized void clear() {
       requestPropertiesSnapshot = null;
       requestProperties.clear();
@@ -191,50 +188,149 @@ public interface HttpDataSource extends DataSource {
             && !contentType.contains("xml");
       };
 
-  /**
-   * Thrown when an error is encountered when trying to read from a {@link HttpDataSource}.
-   */
-  class HttpDataSourceException extends IOException {
+  /** Thrown when an error is encountered when trying to read from a {@link HttpDataSource}. */
+  class HttpDataSourceException extends DataSourceException {
 
+    /**
+     * The type of operation that produced the error. One of {@link #TYPE_READ}, {@link #TYPE_OPEN}
+     * {@link #TYPE_CLOSE}.
+     */
     @Documented
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({TYPE_OPEN, TYPE_READ, TYPE_CLOSE})
     public @interface Type {}
 
+    /** The error occurred reading data from a {@code HttpDataSource}. */
     public static final int TYPE_OPEN = 1;
+    /** The error occurred in opening a {@code HttpDataSource}. */
     public static final int TYPE_READ = 2;
+    /** The error occurred in closing a {@code HttpDataSource}. */
     public static final int TYPE_CLOSE = 3;
+
+    /** The {@link DataSpec} associated with the current connection. */
+    public final DataSpec dataSpec;
 
     @Type public final int type;
 
     /**
-     * The {@link DataSpec} associated with the current connection.
+     * @deprecated Use {@link #HttpDataSourceException(DataSpec, int, int)
+     *     HttpDataSourceException(DataSpec, PlaybackException.ERROR_CODE_IO_UNSPECIFIED, int)}.
      */
-    public final DataSpec dataSpec;
-
+    @Deprecated
     public HttpDataSourceException(DataSpec dataSpec, @Type int type) {
-      super();
+      this(dataSpec, PlaybackException.ERROR_CODE_IO_UNSPECIFIED, type);
+    }
+
+    /**
+     * Constructs an HttpDataSourceException.
+     *
+     * @param dataSpec The {@link DataSpec}.
+     * @param errorCode Reason of the error, should be one of the {@code ERROR_CODE_IO_*} in {@link
+     *     PlaybackException.ErrorCode}.
+     * @param type See {@link Type}.
+     */
+    public HttpDataSourceException(
+        DataSpec dataSpec, @PlaybackException.ErrorCode int errorCode, @Type int type) {
+      super(assignErrorCode(errorCode, type));
       this.dataSpec = dataSpec;
       this.type = type;
     }
 
+    /**
+     * @deprecated Use {@link #HttpDataSourceException(String, DataSpec, int, int)
+     *     HttpDataSourceException(String, DataSpec, PlaybackException.ERROR_CODE_IO_UNSPECIFIED,
+     *     int)}.
+     */
+    @Deprecated
     public HttpDataSourceException(String message, DataSpec dataSpec, @Type int type) {
-      super(message);
-      this.dataSpec = dataSpec;
-      this.type = type;
+      this(message, dataSpec, PlaybackException.ERROR_CODE_IO_UNSPECIFIED, type);
     }
 
-    public HttpDataSourceException(IOException cause, DataSpec dataSpec, @Type int type) {
-      super(cause);
-      this.dataSpec = dataSpec;
-      this.type = type;
-    }
-
-    public HttpDataSourceException(String message, IOException cause, DataSpec dataSpec,
+    /**
+     * Constructs an HttpDataSourceException.
+     *
+     * @param message The error message.
+     * @param dataSpec The {@link DataSpec}.
+     * @param errorCode Reason of the error, should be one of the {@code ERROR_CODE_IO_*} in {@link
+     *     PlaybackException.ErrorCode}.
+     * @param type See {@link Type}.
+     */
+    public HttpDataSourceException(
+        String message,
+        DataSpec dataSpec,
+        @PlaybackException.ErrorCode int errorCode,
         @Type int type) {
-      super(message, cause);
+      super(message, assignErrorCode(errorCode, type));
       this.dataSpec = dataSpec;
       this.type = type;
+    }
+
+    /**
+     * @deprecated Use {@link #HttpDataSourceException(IOException, DataSpec, int, int)
+     *     HttpDataSourceException(IOException, DataSpec,
+     *     PlaybackException.ERROR_CODE_IO_UNSPECIFIED, int)}.
+     */
+    @Deprecated
+    public HttpDataSourceException(IOException cause, DataSpec dataSpec, @Type int type) {
+      this(cause, dataSpec, PlaybackException.ERROR_CODE_IO_UNSPECIFIED, type);
+    }
+
+    /**
+     * Constructs an HttpDataSourceException.
+     *
+     * @param cause The error cause.
+     * @param dataSpec The {@link DataSpec}.
+     * @param errorCode Reason of the error, should be one of the {@code ERROR_CODE_IO_*} in {@link
+     *     PlaybackException.ErrorCode}.
+     * @param type See {@link Type}.
+     */
+    public HttpDataSourceException(
+        IOException cause,
+        DataSpec dataSpec,
+        @PlaybackException.ErrorCode int errorCode,
+        @Type int type) {
+      super(cause, assignErrorCode(errorCode, type));
+      this.dataSpec = dataSpec;
+      this.type = type;
+    }
+
+    /**
+     * @deprecated Use {@link #HttpDataSourceException(String, IOException, DataSpec, int, int)
+     *     HttpDataSourceException(String, IOException, DataSpec,
+     *     PlaybackException.ERROR_CODE_IO_UNSPECIFIED, int)}.
+     */
+    @Deprecated
+    public HttpDataSourceException(
+        String message, IOException cause, DataSpec dataSpec, @Type int type) {
+      this(message, cause, dataSpec, PlaybackException.ERROR_CODE_IO_UNSPECIFIED, type);
+    }
+
+    /**
+     * Constructs an HttpDataSourceException.
+     *
+     * @param message The error message.
+     * @param cause The error cause.
+     * @param dataSpec The {@link DataSpec}.
+     * @param errorCode Reason of the error, should be one of the {@code ERROR_CODE_IO_*} in {@link
+     *     PlaybackException.ErrorCode}.
+     * @param type See {@link Type}.
+     */
+    public HttpDataSourceException(
+        String message,
+        IOException cause,
+        DataSpec dataSpec,
+        @PlaybackException.ErrorCode int errorCode,
+        @Type int type) {
+      super(message, cause, assignErrorCode(errorCode, type));
+      this.dataSpec = dataSpec;
+      this.type = type;
+    }
+
+    @PlaybackException.ErrorCode
+    private static int assignErrorCode(@PlaybackException.ErrorCode int errorCode, @Type int type) {
+      return errorCode == PlaybackException.ERROR_CODE_IO_UNSPECIFIED && type == TYPE_OPEN
+          ? PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED
+          : errorCode;
     }
   }
 
@@ -252,19 +348,22 @@ public interface HttpDataSource extends DataSource {
               + " https://exoplayer.dev/issues/cleartext-not-permitted",
           cause,
           dataSpec,
+          PlaybackException.ERROR_CODE_IO_CLEARTEXT_NOT_PERMITTED,
           TYPE_OPEN);
     }
   }
 
-  /**
-   * Thrown when the content type is invalid.
-   */
+  /** Thrown when the content type is invalid. */
   final class InvalidContentTypeException extends HttpDataSourceException {
 
     public final String contentType;
 
     public InvalidContentTypeException(String contentType, DataSpec dataSpec) {
-      super("Invalid content type: " + contentType, dataSpec, TYPE_OPEN);
+      super(
+          "Invalid content type: " + contentType,
+          dataSpec,
+          PlaybackException.ERROR_CODE_IO_BAD_HTTP_REQUEST,
+          TYPE_OPEN);
       this.contentType = contentType;
     }
   }
@@ -274,17 +373,13 @@ public interface HttpDataSource extends DataSource {
    */
   final class InvalidResponseCodeException extends HttpDataSourceException {
 
-    /**
-     * The response code that was outside of the 2xx range.
-     */
+    /** The response code that was outside of the 2xx range. */
     public final int responseCode;
 
     /** The http status message. */
     @Nullable public final String responseMessage;
 
-    /**
-     * An unmodifiable map of the response header fields and values.
-     */
+    /** An unmodifiable map of the response header fields and values. */
     public final Map<String, List<String>> headerFields;
 
     /** The response body. */
@@ -327,13 +422,16 @@ public interface HttpDataSource extends DataSource {
         Map<String, List<String>> headerFields,
         DataSpec dataSpec,
         byte[] responseBody) {
-      super("Response code: " + responseCode, dataSpec, TYPE_OPEN);
+      super(
+          "Response code: " + responseCode,
+          dataSpec,
+          PlaybackException.ERROR_CODE_IO_BAD_HTTP_STATUS,
+          TYPE_OPEN);
       this.responseCode = responseCode;
       this.responseMessage = responseMessage;
       this.headerFields = headerFields;
       this.responseBody = responseBody;
     }
-
   }
 
   /**
@@ -373,9 +471,7 @@ public interface HttpDataSource extends DataSource {
    */
   void clearRequestProperty(String name);
 
-  /**
-   * Clears all request headers that were set by {@link #setRequestProperty(String, String)}.
-   */
+  /** Clears all request headers that were set by {@link #setRequestProperty(String, String)}. */
   void clearAllRequestProperties();
 
   /**

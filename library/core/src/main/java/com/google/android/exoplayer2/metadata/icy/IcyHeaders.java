@@ -24,14 +24,22 @@ import com.google.android.exoplayer2.metadata.Metadata;
 import com.google.android.exoplayer2.util.Assertions;
 import com.google.android.exoplayer2.util.Log;
 import com.google.android.exoplayer2.util.Util;
+import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /** ICY headers. */
 public final class IcyHeaders implements Metadata.Entry {
 
-  public static final String REQUEST_HEADER_ENABLE_METADATA_NAME = "Icy-MetaData";
-  public static final String REQUEST_HEADER_ENABLE_METADATA_VALUE = "1";
+  /** Request headers for ICY metadata. */
+  public static final Map<String, String> ICY_METADATA_REQUEST_HEADERS =
+      ImmutableMap.of(
+          IcyHeaders.REQUEST_HEADER_ENABLE_METADATA_NAME,
+          IcyHeaders.REQUEST_HEADER_ENABLE_METADATA_VALUE);
+
+  private static final String REQUEST_HEADER_ENABLE_METADATA_NAME = "Icy-MetaData";
+  private static final String REQUEST_HEADER_ENABLE_METADATA_VALUE = "1";
 
   private static final String TAG = "IcyHeaders";
 
