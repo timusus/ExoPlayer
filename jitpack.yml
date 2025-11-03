@@ -1,0 +1,2 @@
+install:
+  - ./gradlew clean -Pgroup=com.github.timusus -Pversion=$VERSION -xtest -xlint :extension-flac:publishToMavenLocal :extension-opus:publishToMavenLocal :library-core:publishToMavenLocal :library-common:publishToMavenLocal :library-extractor:publishToMavenLocal :library-ui:publishToMavenLocal :library-dash:publishToMavenLocal :library-hls:publishToMavenLocal :library-smoothstreaming:publishToMavenLocal :library-rtsp:publishToMavenLocal :library-transformer:publishToMavenLocal :library:publishToMavenLocal
