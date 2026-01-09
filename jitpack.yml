@@ -1,0 +1,2 @@
+install:
+  - ./gradlew clean -Pgroup=com.github.timusus -xtest -xlint -x stripReleaseDebugSymbols :library-core:publishToMavenLocal :library:publishToMavenLocal :extension-flac:publishToMavenLocal :extension-opus:publishToMavenLocal :library-hls:publishToMavenLocal :library-common:publishToMavenLocal :library-extractor:publishToMavenLocal
