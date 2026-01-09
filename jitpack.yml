@@ -1,2 +1,6 @@
+jdk:
+  - openjdk11
+before_install:
+  - yes | sdkmanager "ndk;21.0.6113669" --sdk_root=$ANDROID_HOME
 install:
-  - ./gradlew -Pgroup=com.github.timusus -xtest -xlint -x stripReleaseDebugSymbols :library-core:publishToMavenLocal :library:publishToMavenLocal :extension-flac:publishToMavenLocal :extension-opus:publishToMavenLocal :library-hls:publishToMavenLocal :library-common:publishToMavenLocal :library-extractor:publishToMavenLocal
+  - ./gradlew -Pgroup=com.github.timusus -xtest -xlint :library-core:publishToMavenLocal :library:publishToMavenLocal :extension-flac:publishToMavenLocal :extension-opus:publishToMavenLocal :library-hls:publishToMavenLocal :library-common:publishToMavenLocal :library-extractor:publishToMavenLocal
